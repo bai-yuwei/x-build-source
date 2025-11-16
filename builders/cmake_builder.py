@@ -16,10 +16,14 @@ class CMakeBuilder:
             print(f"compiler: {compiler}")
             buildType = self.config_manager.get_type(project)
             print(f"type: {buildType}")
+            cflags = self.config_manager.get_cflags(project)
+            print(f"cflags: {cflags}")
+            lflags = self.config_manager.get_lflags(project)
+            print(f"lflags: {lflags}")
             print(f"Building {project} for platform {platform}")
-            self.build_project(project, platform, compiler, buildType)
+            self.build_project(project, platform, compiler, buildType, cflags, lflags)
 
-    def build_project(self, project, platform, compiler, buildType):
+    def build_project(self, project, platform, compiler, buildType, cflags, lflags):
         """使用新式 CMake 命令构建项目"""
 
         # 确保构建目录存在
@@ -41,7 +45,11 @@ class CMakeBuilder:
                 "-B", build_dir,
                 "-G", "Ninja",
                 f"-DCMAKE_TOOLCHAIN_FILE={base_path}/config/{platform}/{platform}-{compiler}.cmake",
-                f"-DCMAKE_BUILD_TYPE={buildType}"
+                f"-DCMAKE_BUILD_TYPE={buildType}",
+                # 将cflags列表合并成一个字符串，用空格分隔
+                f"-DCMAKE_CXX_FLAGS={' '.join(cflags)}" if cflags else "",
+                # 将lflags列表合并成一个字符串，用空格分隔
+                f"-DCMAKE_EXE_LINKER_FLAGS={' '.join(lflags)}" if lflags else "",
             ], check=True)
 
             # 构建项目

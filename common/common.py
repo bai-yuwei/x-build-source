@@ -64,3 +64,15 @@ class ConfigManager:
         if config:
             return config.get('type', "debug")
         return "debug"
+    
+    def get_cflags(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('cflags', [])
+        return []
+    
+    def get_lflags(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('lflags', [])
+        return []
