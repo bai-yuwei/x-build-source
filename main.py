@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Callable
 from pathlib import Path
 from common.common import ConfigManager
 from builders.cmake_builder import CMakeBuilder
+from builders.user_builder import UserBuilder
 
 
 def clean_build_directory(clear_dir):
@@ -58,8 +59,29 @@ def handle_clean(config_manager: ConfigManager, args: List[str]):
             print(f"No build directory to clean: {clear_dir}")
 
 def handle_build(config_manager: ConfigManager, args: List[str]):
-    cmake_builder = CMakeBuilder(config_manager)
-    cmake_builder.build()
+    projects = config_manager.get_all_config_names()
+    for project in projects:
+        platform = config_manager.get_platform(project)
+        print(f"platform: {platform}")
+        compiler = config_manager.get_compiler(project)
+        print(f"compiler: {compiler}")
+        buildType = config_manager.get_type(project)
+        print(f"type: {buildType}")
+        cflags = config_manager.get_cflags(project)
+        print(f"cflags: {cflags}")
+        lflags = config_manager.get_lflags(project)
+        print(f"lflags: {lflags}")
+        userBuildCmd = config_manager.get_userBuildCmd(project)
+        print(f"userBuildCmd: {userBuildCmd}")
+        if userBuildCmd:
+            print(f"Building {project} using user-defined build command")
+            user_builder = UserBuilder(project, userBuildCmd)
+            user_builder.build_project()
+            continue
+        else:
+            print(f"Building {project} for platform {platform}")
+            cmake_builder = CMakeBuilder(project, platform, compiler, buildType, cflags, lflags)
+            cmake_builder.build_project()
 
 def handle_list(config_manager: ConfigManager, args: List[str]):
     """列出所有可用的项目配置"""

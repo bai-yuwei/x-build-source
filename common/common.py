@@ -76,3 +76,9 @@ class ConfigManager:
         if config:
             return config.get('lflags', [])
         return []
+    
+    def get_userBuildCmd(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('userBuildCmd', [])
+        return []
