@@ -1,7 +1,6 @@
 import sys
 import os
 import subprocess
-from common.common import ConfigManager
 from pathlib import Path
 
 class CMakeBuilder:

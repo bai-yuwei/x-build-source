@@ -51,14 +51,14 @@ class ConfigManager:
     def get_platform(self, name: str) -> str:
         config = self.get_config(name)
         if config:
-            return config.get('platform', "winArm")
-        return "winArm"
+            return config.get('platform', "")
+        return ""
     
     def get_compiler(self, name: str) -> str:
         config = self.get_config(name)
         if config:
-            return config.get('compiler', "gcc")
-        return "gcc"
+            return config.get('compiler', "")
+        return ""
     def get_type(self, name: str) -> str:
         config = self.get_config(name)
         if config:
@@ -81,4 +81,34 @@ class ConfigManager:
         config = self.get_config(name)
         if config:
             return config.get('userBuildCmd', [])
+        return []
+    
+    def get_dockerfile(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('dockerfile', [])
+        return []
+    
+    def get_dockerImage(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('dockerImage', [])
+        return []
+    
+    def get_context(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('context', [])
+        return []
+    
+    def get_dockerBuildCmd(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('dockerBuildCmd', [])
+        return []
+
+    def get_resultDir(self, name: str) -> List[str]:
+        config = self.get_config(name)
+        if config:
+            return config.get('resultDir', [])
         return []
