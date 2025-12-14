@@ -134,18 +134,28 @@ class DockerBuilder:
         """通过subprocess执行Docker命令（更稳定的替代方案）"""
         try:
         # 构建容器命令
+            shell_script = f"""
+            {command}
+            BUILD_EXIT_CODE=$?
+            echo "build success, exit code: $BUILD_EXIT_CODE"
+            exit $BUILD_EXIT_CODE
+            """
             docker_cmd = [
                 'docker', 'run', '--rm',
                 '-v', f'{os.path.abspath(self.context)}:/workspace',
                 '-w', '/workspace',
                 '--entrypoint', '',
+                # 修改关键：DISPLAY 环境变量
+                '-e', 'DISPLAY=host.docker.internal:0.0',  # 使用Docker提供的特殊DNS名称[4,6](@ref)
+                '-e', 'QT_X11_NO_MITSHM=1',  # 保留，防止Qt应用共享内存错误[3](@ref)
+                # 可选：如果宿主机有NVIDIA GPU，添加以下环境变量以支持硬件加速
+                '-e', '__NV_PRIME_RENDER_OFFLOAD=1',
+                '-e', '__GLX_VENDOR_LIBRARY_NAME=nvidia',
+                # 可选：考虑使用主机网络模式简化连接（但Windows上可能有限制）
+                # '--net', 'host',  # [7](@ref)
+                '-v', '/tmp/.X11-unix:/tmp/.X11-unix:rw',  # 保留，挂载X11套接字
                 self.dockerImage,
-                'sh', '-c', """
-                    ./build.sh
-                    BUILD_EXIT_CODE=$?
-                    echo "build success, exit code: $BUILD_EXIT_CODE"
-                    exit $BUILD_EXIT_CODE
-                """
+                'sh', '-c', shell_script
             ]
 
             print(f"执行一次性构建命令: {' '.join(docker_cmd)}")
@@ -300,15 +310,7 @@ class DockerBuilder:
                 code_dir_name = os.path.basename(os.path.normpath(self.context))
                 code_path_in_container = f"/workspace/{code_dir_name}"
                 print(f"代码在容器内的路径: {code_path_in_container}")
-                if isinstance(self.dockerBuildCmd, str):
-                    # 字符串命令：添加cd命令
-                    modified_build_cmd = f"cd {code_path_in_container} && {self.dockerBuildCmd}"
-                else:
-                    # 列表命令：需要在适当位置插入cd命令
-                    modified_build_cmd = ["cd", code_path_in_container, "&&"] + self.dockerBuildCmd
-
-                print(f"修改后的构建命令: {modified_build_cmd}")
-                if not self._execute_command_with_realtime_output(container, modified_build_cmd):
+                if not self._execute_command_with_realtime_output(container, self.dockerBuildCmd):
                     return False
             else:
                 print("⚠️ 没有构建命令，直接启动容器")
